@@ -1,0 +1,313 @@
+Pre-requisite --> we have the code base 
+
+ci-cd piepline for that code base 
+
+git (version control)
+github (cloud code repository)
+jenkins (integration tool)
+maven (build tool)
+docker (deploying it in a container)
+kubernetes (container orchetsrator)
+============================================
+
+
+source code management 
+
+pre-requisite 
+a) git bash installed on your laptop 
+b) account on github to create a repo where you will push data from your local to remote (github)
+
+tools --> git and github
+
+1. Git (to track the code base)
+
+git init
+git status
+git add .
+git status
+git commit -m "codebase"
+git log --oneline
+git status
+git remote -v
+git remote add origin https://github.com/jsachdev07/igpaug23.git
+git remote -v
+git branch
+git push -u origin master
+
+============================================
+2. Integration and build 
+
+tools --> jenkins and maven 
+
+pre-requisite 
+a) create a vm (aws/gcp/azure) install jenkins and maven, vm with prefrable any linux OS (ubuntu 22.04 , Amazon linux 2023) 2cpu and 4 GB
+
+steps --> 
+
+1. install jenkins and configure jenkins 
+
+> you will be logged in as ubuntu user 
+> sudo su - (you will become root user)
+> sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+> echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" https://pkg.jenkins.io/debian-stable binary/ | sudo tee   /etc/apt/sources.list.d/jenkins.list > /dev/null
+> sudo apt-get update
+> sudo apt-get install jenkins
+
+> sudo apt update
+> sudo apt install fontconfig openjdk-21-jre
+> java -version
+> systemctl restart jenkins
+> systemctl enable jenkins
+
+web browser --> publicIP_vm:8080    (8080 is allowed on the inbound traffic of security group of aws/gcp firewall)
+configure jenkins 
+
+
+2. install maven on the same vm where jenkins is installed 
+
+> wget https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+> sudo mkdir -p /opt/maven
+> sudo tar -xvzf apache-maven-3.9.9-bin.tar.gz -C /opt/maven/ --strip-components=1
+> sudo ln -s /opt/maven/bin/mvn /usr/bin/mvn
+> mvn --version 
+
+3. install git on the same vm where jenkins is installed 
+
+> apt install git -y 
+
+4. create my CI job (on jenkins create a pipeline job and run the script to perform CI)
+
+name of the job --> ci-job
+
+ci script --> 
+
+pipeline
+{
+	agent any
+	stages
+	{
+		stage('Checkout')
+		{
+			steps
+			{
+				git  'https://github.com/jsachdev07/igpaug23.git'
+			}
+		}
+		
+		stage('Compile')
+		{
+			steps
+			{
+				sh 'mvn compile'
+			}
+		}
+
+		stage('Test')
+		{
+			steps
+			{
+				sh 'mvn test'
+			}
+		}
+
+		stage('Packaging')
+		{
+			steps
+			{
+				sh 'mvn package'
+			}
+		}
+     }
+}
+
+
+output --> ABCtechnologies-1.0.war (which will be deployed in a docker container)
+
+1. package location --> /var/lib/jenkins/workspace/ci-job/target/ABCtechnologies-1.0.war
+2. which user executes the jenkins job (jenkins user)
+3. from what location job is executed --> /var/lib/jenkins/workspace/ci-job/
+============================================
+3. Deployment using docker container
+
+
+steps
+
+1. install docker on the same vm where jenkins is installed 
+
+> apt install docker.io -y 
+
+2. I need to give priviliges to jenkins user to run docker commands
+
+(default ownership on this file is root user and docker group) change it from docker group to jenkins group 
+> sudo chown root:jenkins /var/run/docker.sock
+
+3. store the dockerhub credentials in jenkins global credentials that will be referred using some id (mydockerhubcred)
+
+4. we need to install docker pipeline plugin on jenkins so that I can pass credentials using id (mydockerhubcred)
+
+5. write dockerfile and push it to github along with the sourcecode
+
+
+
+job-name --> ci-cd-job
+
+jenkins will refer the job using a variable called as JOB_NAME
+
+when you execute the job, you create a build (1, 2, 3, 4,...) BUILD_NUMBER
+
+
+script --> 
+
+
+pipeline
+{
+	agent any
+	stages
+	{
+		stage('Checkout')
+		{
+			steps
+			{
+				git 'https://github.com/jsachdev07/igpaug23.git'
+			}
+		}
+		
+		stage('Compile')
+		{
+			steps
+			{
+				sh 'mvn compile'
+			}
+		}
+
+		stage('Test')
+		{
+			steps
+			{
+				sh 'mvn test'
+			}
+		}
+
+		stage('Build')
+		{
+			steps
+			{
+				sh 'mvn package'
+			}
+		}
+		
+		stage('Build Docker Image')
+		{
+			steps
+			{
+			    sh 'cp /var/lib/jenkins/workspace/$JOB_NAME/target/ABCtechnologies-1.0.war /var/lib/jenkins/workspace/$JOB_NAME/'
+				sh 'docker build -t ABCtechnologies:$BUILD_NUMBER .'
+				sh 'docker tag ABCtechnologies:$BUILD_NUMBER jsachdev07/ABCtechnologies:$BUILD_NUMBER'
+			}
+		}
+
+		stage('Push Docker Image')
+		{ 
+			steps
+			{   
+			    withDockerRegistry([ credentialsId: "mydockerhubcred", url: "" ])
+			    {
+			       sh 'docker push jsachdev07/ABCtechnologies:$BUILD_NUMBER'
+			    }
+			}
+		}
+
+		stage('Deploy as container')
+		{
+			steps
+			{
+				sh 'docker run -itd -P jsachdev07/ABCtechnologies:$BUILD_NUMBER'
+			}
+		}   
+	}
+		
+}
+
+
+
+dockerfile --> 
+
+FROM iamdevopstrainer/tomcat:base
+COPY ABCtechnologies-1.0.war /usr/local/tomcat/webapps/
+CMD ["catalina.sh", "run"]
+
+package location --> /var/lib/jenkins/workspace/$JOB_NAME/target/ABCtechnologies-1.0.war
+dockerfile --> /var/lib/jenkins/workspace/$JOB_NAME/dockerfile 
+
+
+to run docker image build my package(war) and dockerfile should be in same location 
+
+I need to copy the ABCtechnologies-1.0.war from this /var/lib/jenkins/workspace/$JOB_NAME/target/ABCtechnologies-1.0.war to /var/lib/jenkins/workspace/$JOB_NAME/ABCtechnologies-1.0.war
+
+
+-P (port forwarding done)
+vm > docker ps -a (details of port that is forwarded), 5 digit port number is what you have to use 
+kindly make sure that the inbound traffic on that port is allowed in the AWS security group/GCP firewall.
+
+
+web browser --> PublicIP_vm:portnumber/ABCtechnologies-1.0
+
+
+concludes your deployment (ci and cd part)
+=======================================================
+
+4. deployment to kubernetes
+
+
+steps:
+
+1. deploy a k8s cluster (GKE / EKS) with 2 worker nodes
+2. instal kubectl on jenkins server 
+> apt install kubectl -y 
+3. you need to copy the kubeconfig file of your k8s cluster to jenkins vm on path /var/lib/jenkins/
+4. chown jenkins:jenkins /var/lib/jenkins/kubeconfig
+5. write the pod.yaml file and svc.yaml file like below and upload it on github along with your sourcecode
+
+> pod.yaml
+
+---
+apiVersion:
+kind: Pod
+metadata:
+spec:
+  containers:
+  - name: 
+    image: jsachdev07/ABCtechnologies:1
+	
+> svc.yaml
+
+---
+apiVersion:
+kind: Services
+metadata:
+spec:
+
+
+
+
+		stage('Deploy to k8s')
+		{
+			steps
+			{
+				sh 'export KUBECONFIG=/var/lib/jenkins/kubeconfig'
+				sh 'kubectl apply -f pod.yaml'
+				sh 'kubectl apply -f svc.yaml'
+			}
+		} 
+		
+kubeconfig --> /etc/kubernetes/admin.conf 
+
+
+all the commands/screenshots/outputs/githuburl
+
+pdf/ word documnet 
+
+put everything step by step 
+github url / document --> 
+
+open a ticket (IGP project submission) attach everything over here 
