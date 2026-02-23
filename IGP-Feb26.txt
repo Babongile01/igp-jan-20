@@ -1,13 +1,13 @@
 Pre-requisite --> we have the code base 
 
-ci-cd piepline for that code base 
+ci-cd pipeline for that code base 
 
 git (version control)
 github (cloud code repository)
 jenkins (integration tool)
 maven (build tool)
 docker (deploying it in a container)
-kubernetes (container orchetsrator)
+kubernetes (container orchestrator)
 ============================================
 
 
@@ -68,7 +68,7 @@ configure jenkins
 > wget https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
 > sudo mkdir -p /opt/maven
 > sudo tar -xvzf apache-maven-3.9.9-bin.tar.gz -C /opt/maven/ --strip-components=1
-> sudo ln -s /opt/maven/bin/mvn /usr/bin/mvn
+>m
 > mvn --version 
 
 3. install git on the same vm where jenkins is installed 
@@ -90,7 +90,7 @@ pipeline
 		{
 			steps
 			{
-				git  'https://github.com/jsachdev07/igpaug23.git'
+				git  'https://github.com/Babongile01/igp-jan-20.git'
 			}
 		}
 		
@@ -168,7 +168,7 @@ pipeline
 		{
 			steps
 			{
-				git 'https://github.com/jsachdev07/igpaug23.git'
+				git 'https://github.com/Babongile01/igp-jan-20.git'
 			}
 		}
 		
