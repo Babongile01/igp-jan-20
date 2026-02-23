@@ -9,7 +9,7 @@ pipeline
 		{
 			steps
 			{
-				git  'https://github.com/jsachdev07/igpaug23.git'
+				git  'https://github.com/Babongile01/igp-jan-20.git'
 			}
 		}
 		
@@ -51,7 +51,7 @@ pipeline
 		{
 			steps
 			{
-				git 'https://github.com/jsachdev07/igpaug23.git'
+				git 'https://github.com/Babongile01/igp-jan-20.git'
 			}
 		}
 		
