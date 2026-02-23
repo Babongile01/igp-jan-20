@@ -188,7 +188,7 @@ pipeline
 			}
 		}
 
-		stage('Build')
+		stage('War package')
 		{
 			steps
 			{
@@ -212,7 +212,7 @@ pipeline
 			{   
 			    withDockerRegistry([ credentialsId: "mydockerhubcred", url: "" ])
 			    {
-			       sh 'docker push jsachdev07/ABCtechnologies:$BUILD_NUMBER'
+			       sh 'docker push babongile001/ABCtechnologies:$BUILD_NUMBER'
 			    }
 			}
 		}
@@ -221,7 +221,7 @@ pipeline
 		{
 			steps
 			{
-				sh 'docker run -itd -P jsachdev07/ABCtechnologies:$BUILD_NUMBER'
+				sh 'docker run -itd -P babongile001/ABCtechnologies:$BUILD_NUMBER'
 			}
 		}   
 	}
