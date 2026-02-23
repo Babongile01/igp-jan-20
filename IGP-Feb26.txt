@@ -201,8 +201,8 @@ pipeline
 			steps
 			{
 			    sh 'cp /var/lib/jenkins/workspace/$JOB_NAME/target/abctechnologies-1.0.war /var/lib/jenkins/workspace/$JOB_NAME/'
-				sh 'docker build -t abctechnologies:$BUILD_NUMBER .'
-				sh 'docker tag abctechnologies:$BUILD_NUMBER babongile001/abctechnologies:$BUILD_NUMBER'
+				sh 'docker build -t ABCtechnologies:$BUILD_NUMBER .'
+				sh 'docker tag ABCtechnologies:$BUILD_NUMBER babongile001/abctechnologies:$BUILD_NUMBER'
 			}
 		}
 
@@ -231,6 +231,7 @@ pipeline
 
 
 dockerfile --> 
+
 
 FROM iamdevopstrainer/tomcat:base
 COPY ABCtechnologies-1.0.war /usr/local/tomcat/webapps/
