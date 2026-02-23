@@ -29,7 +29,7 @@ git commit -m "codebase"
 git log --oneline
 git status
 git remote -v
-git remote add origin https://github.com/jsachdev07/igpaug23.git
+git remote add origin https://github.com/Babongile01/igp-jan-20.git
 git remote -v
 git branch
 git push -u origin master
@@ -200,9 +200,9 @@ pipeline
 		{
 			steps
 			{
-			    sh 'cp /var/lib/jenkins/workspace/$JOB_NAME/target/ABCtechnologies-1.0.war /var/lib/jenkins/workspace/$JOB_NAME/'
-				sh 'docker build -t ABCtechnologies:$BUILD_NUMBER .'
-				sh 'docker tag ABCtechnologies:$BUILD_NUMBER jsachdev07/ABCtechnologies:$BUILD_NUMBER'
+			    sh 'cp /var/lib/jenkins/workspace/$JOB_NAME/target/abctechnologies-1.0.war /var/lib/jenkins/workspace/$JOB_NAME/'
+				sh 'docker build -t abctechnologies:$BUILD_NUMBER .'
+				sh 'docker tag abctechnologies:$BUILD_NUMBER babongile001/abctechnologies:$BUILD_NUMBER'
 			}
 		}
 
@@ -212,7 +212,7 @@ pipeline
 			{   
 			    withDockerRegistry([ credentialsId: "mydockerhubcred", url: "" ])
 			    {
-			       sh 'docker push babongile001/ABCtechnologies:$BUILD_NUMBER'
+			       sh 'docker push babongile001/abctechnologies:$BUILD_NUMBER'
 			    }
 			}
 		}
@@ -221,7 +221,7 @@ pipeline
 		{
 			steps
 			{
-				sh 'docker run -itd -P babongile001/ABCtechnologies:$BUILD_NUMBER'
+				sh 'docker run -itd -P babongile001/abctechnologies:$BUILD_NUMBER'
 			}
 		}   
 	}
@@ -277,7 +277,7 @@ metadata:
 spec:
   containers:
   - name: 
-    image: jsachdev07/ABCtechnologies:1
+    image: babongile001/ABCtechnologies:1
 	
 > svc.yaml
 
